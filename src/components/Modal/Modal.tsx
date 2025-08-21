@@ -1,4 +1,3 @@
-// src/components/Modal/Modal.tsx
 import { useEffect, useRef, type PropsWithChildren } from "react";
 import { createPortal } from "react-dom";
 import css from "./Modal.module.css";

@@ -1,12 +1,12 @@
 import { ErrorMessage, Field, Form, Formik } from "formik";
-import type { CreateNoteInput } from "../../services/noteService";
+import { createNote, type CreateNoteInput } from "../../services/noteService";
 import type { NoteTag } from "../../types/note";
 import css from "./NoteForm.module.css";
 import * as Yup from "yup";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface NoteFormProps {
   onCancel: () => void;
-  onCreate: (values: CreateNoteInput) => void | Promise<void>;
 }
 
 const TAGS: NoteTag[] = ["Todo", "Work", "Personal", "Meeting", "Shopping"];
@@ -17,19 +17,28 @@ const schema = Yup.object({
   tag: Yup.mixed<NoteTag>().oneOf(TAGS, "Invalid tag").required("Required"),
 });
 
-const NoteForm = ({ onCancel, onCreate }: NoteFormProps) => {
+const NoteForm = ({ onCancel }: NoteFormProps) => {
   const initialValues: CreateNoteInput = {
     title: "",
     content: "",
     tag: "Todo",
   };
 
+  const queryClient = useQueryClient();
+  const { mutateAsync, isPending } = useMutation({
+    mutationFn: (payload: CreateNoteInput) => createNote(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      onCancel();
+    },
+  });
+
   return (
     <Formik
       initialValues={initialValues}
       validationSchema={schema}
       onSubmit={async (values, helpers) => {
-        await onCreate(values);
+        await mutateAsync(values);
         helpers.setSubmitting(false);
       }}
     >
@@ -77,7 +86,7 @@ const NoteForm = ({ onCancel, onCreate }: NoteFormProps) => {
             <button
               type="submit"
               className={css.submitButton}
-              disabled={isSubmitting || !isValid || !dirty}
+              disabled={isSubmitting || isPending || !isValid || !dirty}
             >
               Create note
             </button>

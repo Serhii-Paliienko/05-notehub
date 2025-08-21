@@ -1,24 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import css from "./App.module.css";
 import { useDebounce } from "use-debounce";
-import {
-  keepPreviousData,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
-import {
-  createNote,
-  deleteNote,
-  fetchNotes,
-  type CreateNoteInput,
-  type FetchNotesResponse,
-} from "../../services/noteService";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import SearchBox from "../SearchBox/SearchBox";
 import Pagination from "../Pagination/Pagination";
 import NoteList from "../NoteList/NoteList";
 import Modal from "../Modal/Modal";
 import NoteForm from "../NoteForm/NoteForm";
+import {
+  fetchNotes,
+  type FetchNotesResponse,
+} from "../../services/noteService";
 
 function Loader() {
   return <div className={css.loader}>Loading...</div>;
@@ -58,27 +50,6 @@ const App = () => {
     refetchOnWindowFocus: false,
   });
 
-  const queryClient = useQueryClient();
-
-  const createMutation = useMutation({
-    mutationFn: (payload: CreateNoteInput) => createNote(payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notes"] }),
-  });
-
-  const deleteMutation = useMutation({
-    mutationFn: (id: string) => deleteNote(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notes"] }),
-  });
-
-  async function handleCreate(values: CreateNoteInput) {
-    await createMutation.mutateAsync(values);
-    setIsModalOpen(false);
-  }
-
-  function handleDelete(id: string) {
-    deleteMutation.mutate(id);
-  }
-
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
@@ -96,15 +67,10 @@ const App = () => {
       </header>
       {isPending && <Loader />}
       {error && <ErrorBox error={error} />}
-      {data && data.notes.length > 0 && (
-        <NoteList notes={data.notes} onDelete={handleDelete} />
-      )}
+      {data && data.notes.length > 0 && <NoteList notes={data.notes} />}
       {isModalOpen && (
         <Modal onClose={() => setIsModalOpen(false)}>
-          <NoteForm
-            onCancel={() => setIsModalOpen(false)}
-            onCreate={handleCreate}
-          />
+          <NoteForm onCancel={() => setIsModalOpen(false)} />
         </Modal>
       )}
     </div>
