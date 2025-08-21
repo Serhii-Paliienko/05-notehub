@@ -24,8 +24,8 @@ const Pagination = ({
         previousClassName={css.prev}
         nextClassName={css.next}
         breakClassName={css.break}
-        nextLabel="→"
-        previousLabel="←"
+        nextLabel="&raquo;"
+        previousLabel="&laquo;"
       />
     </div>
   );
